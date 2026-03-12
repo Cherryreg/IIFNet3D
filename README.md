@@ -22,3 +22,12 @@ Visualization results on ScanNet:
 
 Visualization results on SUN-RGBD:
 ![vis2](./images/sunrgbd_vis.png)
+
+## Acknowledgments
+[mmdetection3D](https://github.com/open-mmlab/mmdetection3d)
+
+[CAGroup3D](https://github.com/Haiyang-W/CAGroup3D)
+
+[SPGroup3D](https://github.com/zyrant/SPGroup3D)
+
+
