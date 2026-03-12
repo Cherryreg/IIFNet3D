@@ -16,3 +16,9 @@ For dataset preparation:
 For training and evaluation:
 - [Train and Eval](docs/run.md)
 
+## Results
+Visualization results on ScanNet:
+![vis](./images/scannet_vis.png)
+
+Visualization results on SUN-RGBD:
+![vis2](./images/sunrgbd_vis.png)
