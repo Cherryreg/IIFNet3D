@@ -4,4 +4,15 @@ This repo contains PyTorch implementation for IIFNet3D based on [MMDetection3D](
 ## Method
 Overall pipeline of IIFNet3D:
 
-![overview](./images/method.pdf)
+![overview](./images/method.png)
+
+## Getting Started
+For environment setup:
+- [Installation](docs/installation.md) 
+
+For dataset preparation:
+- [Dataset preparation](data/README.md)
+
+For training and evaluation:
+- [Train and Eval](docs/run.md)
+
