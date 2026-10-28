@@ -51,8 +51,6 @@ mkdir -p checkpoints
 
 Download the released weights using the links in
 [Main Results](../README.md#main-results).
-Model files should remain outside normal Git history because each retained
-checkpoint is larger than 500 MB.
 
 The SUN RGB-D config initializes its image branch from the public ImVoteNet
 checkpoint hosted by OpenMMLab. MMCV downloads and caches it automatically on

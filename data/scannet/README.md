@@ -44,7 +44,6 @@ color images, depth maps, and camera poses exported from each ScanNet `.sens`
 file. `scannet_fused` contains the per-point image features generated in the
 next section.
 
-The Python 3
 [OpenScene preprocessing script](https://github.com/pengsongyou/openscene/blob/main/scripts/preprocess/preprocess_2d_scannet.py)
 implements the same protocol. It is adapted from
 [3DMV](https://github.com/angeladai/3DMV/blob/master/prepare_data/prepare_2d_data.py)
