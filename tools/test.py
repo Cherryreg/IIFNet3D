@@ -1,10 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import os
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,9"
-os.environ['CUDA_VISIBLE_DEVICES'] = '7'
 import argparse
+import sys
 
 import warnings
+
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
 import mmcv
 import torch
@@ -72,11 +75,11 @@ def parse_args():
         nargs='+',
         help='evaluation metrics, which depends on the dataset, e.g., "bbox",'
         ' "segm", "proposal" for COCO, and "mAP", "recall" for PASCAL VOC')
-    parser.add_argument('--show', 
-                        action='store_true', 
+    parser.add_argument('--show',
+                        action='store_true',
                         help='show results')
     parser.add_argument(
-        '--show-dir', 
+        '--show-dir',
         help='directory where results will be saved')
     parser.add_argument(
         '--gpu-collect',

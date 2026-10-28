@@ -1,0 +1,3 @@
+# Some legacy source files use CRLF line endings. Treat the carriage return as
+# part of the line ending rather than as trailing whitespace during Git checks.
+*.py whitespace=trailing-space,space-before-tab,cr-at-eol

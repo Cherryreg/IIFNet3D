@@ -163,11 +163,12 @@ class SUNRGBDData(object):
                 osp.join(self.root_dir, 'points', f'{sample_idx:06d}.bin'))
 
             info['pts_path'] = osp.join('points', f'{sample_idx:06d}.bin')
-            
+
             ##########################superpoint#######################
-            # info['pts_superpoints_path'] = osp.join('superpoints', f'{sample_idx:06d}.bin')
+            info['pts_superpoints_path'] = osp.join(
+                'superpoints', f'{sample_idx:06d}.bin')
             ###########################################################
-            
+
             img_path = osp.join('image', f'{sample_idx:06d}.jpg')
             image_info = {
                 'image_idx': sample_idx,

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.bak
+*.so
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+
+# Local third-party checkouts
+third_party
+
+# Experiments and model weights
+work_dirs
+checkpoints
+*.pth

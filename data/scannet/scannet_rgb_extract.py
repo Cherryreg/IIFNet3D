@@ -1,8 +1,8 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 import torch
 import imageio
 import argparse
+import cv2
 import numpy as np
 from glob import glob
 from tqdm import tqdm, trange
@@ -70,7 +70,6 @@ def process_one_scene(data_path, out_dir, args):
     # short hand for processing 2D features
     scene = join(args.data_root_2d, scene_id)
     img_dirs = sorted(glob(join(scene, 'color/*')), key=lambda x: int(os.path.basename(x)[:-4]))
-    num_img = len(img_dirs)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # device = 'cpu'
 
@@ -86,9 +85,10 @@ def process_one_scene(data_path, out_dir, args):
     # sum_features = torch.zeros((n_points_cur, feat_dim), device=device)
 
     ################ Feature Fusion ###################
-    vis_id = torch.zeros((n_points_cur, num_img), dtype=int, device=device)
-    ###--added
-    feat_list_per_point = [[] for _ in range(n_points_cur)]  # 每个点一个列表收集其在可见帧的特征
+    # Keep one uniformly sampled visible-frame feature per point. Online
+    # reservoir sampling avoids retaining a tensor view for every point/frame.
+    feat_bank = torch.zeros(n_points_cur, feat_dim, device=device)
+    seen_count = torch.zeros(n_points_cur, dtype=torch.long, device=device)
     
     for img_id, img_dir in enumerate(tqdm(img_dirs)):
         # load pose
@@ -97,6 +97,12 @@ def process_one_scene(data_path, out_dir, args):
 
         # load depth and convert to meter
         depth = imageio.v2.imread(img_dir.replace('color', 'depth').replace('jpg', 'png')) / depth_scale
+        target_width, target_height = point2img_mapper.image_dim
+        if depth.shape[:2] != (target_height, target_width):
+            depth = cv2.resize(
+                depth,
+                (target_width, target_height),
+                interpolation=cv2.INTER_NEAREST)
 
         # calculate the 3d-2d mapping based on the depth
         mapping = np.ones([n_points, 4], dtype=int)
@@ -105,27 +111,25 @@ def process_one_scene(data_path, out_dir, args):
             continue
 
         mapping = torch.from_numpy(mapping).to(device)
-        mask = mapping[:, 3] #提取有效性标志，表示哪些点在当前图像中是可见的
-        vis_id[:, img_id] = mask #记录哪些点在当前图像中是可见的
+        mask = mapping[:, 3].bool() #提取有效性标志，表示哪些点在当前图像中是可见的
+        visible_indices = torch.where(mask)[0]
         if keep_features_in_memory:
             feat_2d = img_features[img_id].to(device)
         else:
             #feat_2d = extract_openseg_img_feature(img_dir, openseg_model, text_emb, img_size=[240, 320]).to(device)
-            feat_2d = extract_img_feature(img_dir, model, img_size=[240, 320]).to('cpu')
+            feat_2d = extract_img_feature(
+                img_dir, model, img_size=[240, 320]).to(device)
             
 
-        feat_2d_3d = feat_2d[:, mapping[:, 1], mapping[:, 2]].permute(1, 0)
-        
-        for idx in torch.where(mask != 0)[0]:
-            feat_list_per_point[idx.item()].append(feat_2d_3d[idx])
+        visible_features = feat_2d[
+            :, mapping[visible_indices, 1], mapping[visible_indices, 2]
+        ].permute(1, 0)
 
-    # 对于每个点而言，随机选一帧的特征
-    feat_bank = torch.zeros(n_points, feat_2d_3d.shape[1], device=device)
-    for i, feat_list in enumerate(feat_list_per_point):
-        if feat_list:
-            rand_idx = np.random.choice(len(feat_list)) 
-            rand_feat = feat_list[rand_idx]
-            feat_bank[i] = rand_feat
+        seen_count[visible_indices] += 1
+        replace_probability = seen_count[visible_indices].float().reciprocal()
+        replace_mask = torch.rand(
+            visible_indices.shape[0], device=device) < replace_probability
+        feat_bank[visible_indices[replace_mask]] = visible_features[replace_mask]
          
         # y_coords = mapping[:, 1]  # 第二列是 y 坐标
         # x_coords = mapping[:, 2]  # 第三列是 x 坐标
@@ -142,7 +146,7 @@ def process_one_scene(data_path, out_dir, args):
     #将坐标与特征拼接
     locs_in = locs_in.to(device=device) 
     feat_bank = torch.cat((locs_in,feat_bank), dim=1)
-    point_ids = torch.unique(vis_id.nonzero(as_tuple=False)[:, 0])
+    point_ids = torch.where(seen_count > 0)[0]
 
     save_fused_feature_v2(feat_bank, point_ids, n_points, out_dir, scene_id, args)
 
@@ -216,8 +220,10 @@ def main(args):
     model = ImVoteNetBackboneNeck(backbone =backbone_cfg, neck=neck_cfg)
     checkpoint_path = args.model_path
     # device = 'cpu'
-    model.load_state_dict(torch.load(checkpoint_path)['state_dict'],strict=False)
-    model = model.cuda()
+    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    model.load_state_dict(checkpoint['state_dict'], strict=False)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
     model.eval()
     
     args.model = model
