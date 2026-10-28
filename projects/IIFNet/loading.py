@@ -20,7 +20,7 @@ class LoadSuperPointsFromFile(object):
     def __init__(self,
                  multi_scale=1,
                  file_client_args=dict(backend='disk')):
-      
+
         self.file_client_args = file_client_args.copy()
         self.file_client = None
         self.multi_scale = multi_scale
@@ -38,10 +38,10 @@ class LoadSuperPointsFromFile(object):
             self.file_client = mmcv.FileClient(**self.file_client_args)
         try:
             spts_bytes = self.file_client.get(spts_filename)
-            superpoints = np.frombuffer(spts_bytes, dtype=np.int)
+            superpoints = np.frombuffer(spts_bytes, dtype=np.int64)
         except ConnectionError:
             mmcv.check_file_exist(spts_filename)
-            superpoints = np.fromfile(spts_filename, dtype=np.long)
+            superpoints = np.fromfile(spts_filename, dtype=np.int64)
         return superpoints
 
     def __call__(self, results):
@@ -55,7 +55,7 @@ class LoadSuperPointsFromFile(object):
                 Added key and value are described below.
         """
         superpoints_filename = results['superpoints_filename']
-        
+
         superpoints = self._load_superpoints(superpoints_filename)
 
         results['superpoints'] = superpoints
@@ -63,9 +63,9 @@ class LoadSuperPointsFromFile(object):
 
     def __repr__(self):
         """str: Return a string that describes the module."""
-        repr_str = self.__class__.__name__ 
+        repr_str = self.__class__.__name__
         return repr_str
-    
+
 
 @PIPELINES.register_module()
 class LoadFusedPointsFromFile(object):
@@ -82,7 +82,7 @@ class LoadFusedPointsFromFile(object):
     def __init__(self,
                  multi_scale=1,
                  file_client_args=dict(backend='disk')):
-      
+
         self.file_client_args = file_client_args.copy()
         self.file_client = None
         self.multi_scale = multi_scale
@@ -100,11 +100,11 @@ class LoadFusedPointsFromFile(object):
         #     self.file_client = mmcv.FileClient(**self.file_client_args)
         # try:
         #     spts_bytes = self.file_client.get(fpts_filename)
-        #     superpoints = np.frombuffer(spts_bytes, dtype=np.int)
+        #     superpoints = np.frombuffer(spts_bytes, dtype=np.int64)
         # except ConnectionError:
         #     mmcv.check_file_exist(fpts_filename)
-        #     superpoints = np.fromfile(fpts_filename, dtype=np.long)
-        
+        #     superpoints = np.fromfile(fpts_filename, dtype=np.int64)
+
         if self.file_client is None:
             self.file_client = mmcv.FileClient(**self.file_client_args)
 
@@ -122,7 +122,7 @@ class LoadFusedPointsFromFile(object):
         fused_feats = fused_data['feat'][:, 3:]
 
         return fused_feats
-        
+
 
     def __call__(self, results):
         """Call function to load fusedpoints data from file.
@@ -148,6 +148,5 @@ class LoadFusedPointsFromFile(object):
 
     def __repr__(self):
         """str: Return a string that describes the module."""
-        repr_str = self.__class__.__name__ 
+        repr_str = self.__class__.__name__
         return repr_str
-

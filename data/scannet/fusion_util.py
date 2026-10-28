@@ -117,10 +117,12 @@ def extract_img_feature(img_dir, model, img_size=None):
     # # 禁用梯度计算，节省内存和加速推理
     # with torch.no_grad():
     #计算模型运行时间
-    torch.cuda.synchronize()
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
     start_time = time.perf_counter()
     feat_2d = model(image_tensor)
-    torch.cuda.synchronize()
+    if device.type == 'cuda':
+        torch.cuda.synchronize()
     elapsed = time.perf_counter() - start_time
     print(f"Image feature extraction time: {elapsed:.3f} s")
     #FPS
@@ -133,16 +135,22 @@ def extract_img_feature(img_dir, model, img_size=None):
 def save_fused_feature(feat_bank, point_ids, n_points, out_dir, scene_id, args):
     '''Save features.'''
 
+    feat_bank = feat_bank.detach().cpu()
+    point_ids = point_ids.detach().cpu()
+
     for n in range(args.num_rand_file_per_scene):
         if n_points < args.n_split_points:
             n_points_cur = n_points # to handle point cloud numbers less than n_split_points
         else:
             n_points_cur = args.n_split_points
 
-        rand_ind = np.random.choice(range(n_points), n_points_cur, replace=False)
-
-        mask_entire = torch.zeros(n_points, dtype=torch.bool)
-        mask_entire[rand_ind] = True
+        if n_points_cur == n_points:
+            mask_entire = torch.ones(n_points, dtype=torch.bool)
+        else:
+            rand_ind = np.random.choice(
+                range(n_points), n_points_cur, replace=False)
+            mask_entire = torch.zeros(n_points, dtype=torch.bool)
+            mask_entire[rand_ind] = True
         
         feat_dim = feat_bank.shape[1] # feature dimension
         full_feat = torch.zeros((n_points, feat_dim), dtype=feat_bank.dtype, device=feat_bank.device)
@@ -167,16 +175,22 @@ def save_fused_feature(feat_bank, point_ids, n_points, out_dir, scene_id, args):
 def save_fused_feature_v2(feat_bank, point_ids, n_points, out_dir, scene_id, args):
     '''Save features.'''
 
+    feat_bank = feat_bank.detach().cpu()
+    point_ids = point_ids.detach().cpu()
+
     for n in range(args.num_rand_file_per_scene):
         if n_points < args.n_split_points:
             n_points_cur = n_points # to handle point cloud numbers less than n_split_points
         else:
             n_points_cur = args.n_split_points
 
-        rand_ind = np.random.choice(range(n_points), n_points_cur, replace=False)
-
-        mask_entire = torch.zeros(n_points, dtype=torch.bool)
-        mask_entire[rand_ind] = True
+        if n_points_cur == n_points:
+            mask_entire = torch.ones(n_points, dtype=torch.bool)
+        else:
+            rand_ind = np.random.choice(
+                range(n_points), n_points_cur, replace=False)
+            mask_entire = torch.zeros(n_points, dtype=torch.bool)
+            mask_entire[rand_ind] = True
         
         mask = torch.zeros(n_points, dtype=torch.bool)
         mask[point_ids] = True

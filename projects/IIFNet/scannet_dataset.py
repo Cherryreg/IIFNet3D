@@ -69,7 +69,7 @@ class SPScanNetDataset(Custom3DDataset):
             box_type_3d=box_type_3d,
             filter_empty_gt=filter_empty_gt,
             test_mode=test_mode)
-        
+
         #addded got fuse points
         self.use_2d = use_2d
 
@@ -95,10 +95,10 @@ class SPScanNetDataset(Custom3DDataset):
         if info['annos']['gt_num'] != 0:
             gt_bboxes_3d = info['annos']['gt_boxes_upright_depth'].astype(
                 np.float32)  # k, 6
-            gt_labels_3d = info['annos']['class'].astype(np.long)
+            gt_labels_3d = info['annos']['class'].astype(np.int64)
         else:
             gt_bboxes_3d = np.zeros((0, 6), dtype=np.float32)
-            gt_labels_3d = np.zeros((0, ), dtype=np.long)
+            gt_labels_3d = np.zeros((0, ), dtype=np.int64)
 
         # to target box structure
         gt_bboxes_3d = DepthInstance3DBoxes(
@@ -121,7 +121,7 @@ class SPScanNetDataset(Custom3DDataset):
             pts_semantic_mask_path=pts_semantic_mask_path,
             axis_align_matrix=axis_align_matrix)
         return anns_results
-        
+
 
     def get_data_info(self, index):
         """Get data info according to the given index.
@@ -142,7 +142,7 @@ class SPScanNetDataset(Custom3DDataset):
         sample_idx = info['point_cloud']['lidar_idx']
         pts_filename = osp.join(self.data_root, info['pts_path'])
         superpoints_filename = osp.join(self.data_root, info['pts_superpoints_path'])
-        
+
         #added by fzx for use 2d img
         if self.use_2d:
             fused_points_filename = osp.join(self.data_root, 'scannet_fused/', sample_idx + '.pt')
@@ -270,4 +270,3 @@ class SPScanNetDataset(Custom3DDataset):
             pred_labels = result['labels_3d']
             show_result_v2_with_superpoint(points, superpoints, gt_bboxes, gt_labels,
                         pred_bboxes, pred_labels, out_dir, file_name)
-

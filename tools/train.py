@@ -4,18 +4,14 @@ from __future__ import division
 import os
 import argparse
 import copy
-# print("importing torch, mmcv, mmdet3d, mmdet, mmseg")
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-# os.environ['MASTER_PORT'] = '8888'
-# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
-#os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,6,7"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,8,9"
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0,6,7,8"
 import sys
-sys.path.append('/data2/fzx/project/IIFNet3D')
 import time
 import warnings
 from os import path as osp
+
+repo_root = osp.abspath(osp.join(osp.dirname(__file__), '..'))
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
 
 import mmcv
 import torch
@@ -44,7 +40,7 @@ def parse_args():
     parser.add_argument('config', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
     parser.add_argument(
-        '--resume-from', 
+        '--resume-from',
         help='the checkpoint file to resume from')
     parser.add_argument(
         '--auto-resume',
@@ -129,7 +125,7 @@ def main():
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
-    
+
     # import modules from plguin/xx, registry will be updated
     if hasattr(cfg, "plugin"):
         if cfg.plugin:
